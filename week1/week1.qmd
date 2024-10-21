@@ -1,0 +1,126 @@
+---
+title: "Week 1"
+author: "Daniel Poisel"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    self_contained: true
+---
+
+
+```{r}
+library(tidyverse)
+
+# Custom plot theme
+dark_theme_custom <- theme(
+  panel.background = element_rect(fill = "#3a3a4f"),  # Brighter dark background color
+  plot.background = element_rect(fill = "#3a3a4f"),   # Same as panel background
+  panel.grid.major = element_line(color = "#4b4b6b"), # Grid color slightly brighter
+  panel.grid.minor = element_line(color = "#4b4b6b"),
+  axis.text = element_text(color = "white", size = 12), # White axis text with larger font
+  axis.title = element_text(color = "white", size = 14), # White axis titles with larger font
+  legend.background = element_rect(fill = "#3a3a4f"), # Dark legend background
+  legend.text = element_text(color = "white"),        # White legend text
+  legend.title = element_text(color = "white"),       # White legend title
+  plot.title = element_text(color = "white", hjust = 0.5), # Centered white plot title
+  panel.border = element_blank(),                     # Remove panel border
+  axis.line = element_line(color = "white")           # White axis lines
+)
+```
+
+# Task 1
+
+```{r}
+# Create the dataframe
+data <- tibble(
+  species = c("swift", "falcon", "goose", "starling", "cheetah", "horse", "hippo", "man", "squirrel", "cat", "shark", "seahorse"),
+  speed = c(200.00, 70.00, 70.00, 50.00, 70.00, 50.00, 30.00, 25.00, 12.00, 35.00, 40.00, 0.02),
+  medium = factor(c("air", "air", "air", "air", "land", "land", "land", "land", "land", "land", "water", "water")),
+  weight = c(0.02, 0.70, 2.20, 0.05, 50.00, 450.00, 2500.00, 80.00, 0.60, 4.00, 600.00, 0.10)
+)
+
+# View the dataframe
+print(data)
+
+```
+
+```{r}
+data |>
+  ggplot(aes(x = medium, y = speed, fill = medium)) +
+  geom_boxplot(color = "white") + # Set the color of the boxplot whiskers to white
+  scale_fill_manual(values = c("air" = "#66c2a5", "land" = "#fc8d62", "water" = "#8da0cb")) +
+  labs(title = "Speed by Medium", x = "Medium", y = "Speed") +
+  dark_theme_custom
+```
+
+```{r}
+# Create a new tibble with the count of entries for each medium
+medium_counts <- data |>
+  count(medium, name = "count")
+
+# View the new tibble
+print(medium_counts)
+```
+
+# Task 2
+
+```{r}
+skewed <- function(x_mean, p_50, s) {
+  # x_mean - mean value of distribution
+  # p_50 - mediam value of distribution
+  # s - standard deviation of distribution
+  
+  s_index = 3*(x_mean - p_50)*s
+  if (s_index > 1) {
+    return(c(s_index, "ss")) # Significantly Skewed
+  }
+  else {
+    return(c(s_index, "nss")) # Not Significantly Skewed
+  }
+}
+```
+
+```{r}
+# Set the seed for reproducibility
+set.seed(123)
+
+# Draw 100 normally distributed values
+values <- rnorm(100)
+
+# View the values
+print(values)
+
+# Caculate Skewness Index
+result_b <- skewed(mean(values), median(values), sd(values))
+print(result_b)
+
+# Plot values
+ggplot(data.frame(values), aes(x = values)) +
+  geom_histogram(binwidth = 0.2, fill = "#66c2a5", color = "white") +
+  labs(title = "Histogram of Values", x = "Values", y = "Frequency") +
+  dark_theme_custom
+```
+
+```{r}
+values_sq <- values^2
+result_c <- skewed(mean(values_sq), median(values_sq), sd(values_sq))
+print(result_c)
+
+# Plot values
+ggplot(data.frame(values_sq), aes(x = values)) +
+  geom_histogram(binwidth = 0.2, fill = "#66c2a5", color = "white") +
+  labs(title = "Histogram of Values", x = "Values", y = "Frequency") +
+  dark_theme_custom
+```
+
+# Task 3
+
+```{r}
+C_to_F <- function(temp) {
+  return ((temp)*9/5) + 32
+}
+
+F_to_C <- function(temp) {
+  return (temp - 32) * 5/9
+}
+```
