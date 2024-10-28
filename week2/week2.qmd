@@ -1,0 +1,164 @@
+---
+title: "Week 2"
+author: "Daniel Poisel"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    self_contained: true
+    embed-resources: true
+---
+
+# Task 2 b + c
+
+```{r}
+library(tidyverse)
+library(knitr)
+
+# Define the second derivative function
+sec_dev <- function(theta) {
+  return(-4 / theta - 1 / (1 - theta)^2)
+}
+
+# Generate theta values
+theta_values <- seq(0.01, 0.99, by = 0.01)
+
+# Calculate second derivative for each theta
+second_derivative_values <- sapply(theta_values, sec_dev)
+
+# Create data frame
+data <- tibble(theta = theta_values, second_derivative = second_derivative_values)
+
+# Maximum likelihood estimate for binomial distribution with n = 5 and x = 4
+theta_mle <- 4 / 5
+
+# Plot the second derivative and highlight the maximum likelihood
+ggplot(data, aes(x = theta, y = second_derivative)) +
+  geom_line(color = "blue") +
+  geom_vline(xintercept = theta_mle, linetype = "dashed", color = "red") + # Highlight the maximum likelihood value
+  annotate("text", x = theta_mle, y = min(second_derivative_values), label = "Max Likelihood", color = "red", vjust = -0.5) +
+  labs(title = "Second Derivative of the Log Likelihood", x = "θ", y = "Second Derivative") +
+  theme_minimal()
+
+```
+
+
+# Task 3
+
+```{r}
+# Parameters
+n <- 15
+p <- 0.001
+
+# Probability of observing 0 successes
+prob_zero_successes <- dbinom(0, size = n, prob = p)
+
+# Print the probability
+prob_zero_successes
+```
+
+# Task 4
+
+a)
+
+```{r}
+options(warn = -1)
+# Set seed for reproducibility
+set.seed(123)
+
+# Simulate 10 replications
+replications_10 <- rbinom(10, size = 100, prob = 0.5)
+
+# View the simulated values
+replications_10
+```
+
+b)
+
+```{r}
+# Define the likelihood function
+likelihood <- function(p, n, x) {
+  return(choose(n, x) * p^x * (1 - p)^(n - x))
+}
+
+# Generate a sequence of p values
+p_values <- seq(0.01, 0.99, by = 0.01)
+
+# Assume n = 100 and use the average of the replications as x
+n <- 100
+x <- mean(replications_10)
+
+# Calculate the likelihood for each p
+likelihood_values <- sapply(p_values, likelihood, n = n, x = x)
+
+# Create a data frame for plotting
+data_10 <- data.frame(p = p_values, likelihood = likelihood_values)
+
+# Plot the likelihood function
+ggplot(data_10, aes(x = p, y = likelihood)) +
+  geom_line(color = "blue") +
+  labs(title = "Likelihood Function for Binomial Distribution (10 replications)", x = "p", y = "Likelihood") +
+  theme_minimal() +
+  geom_vline(xintercept = x/n, linetype = "dashed", color = "red") + # Highlight the maximum likelihood value
+  annotate("text", x = x/n, y = max(likelihood_values), label = "Max Likelihood", color = "red", vjust = -0.5)
+
+```
+
+c)
+
+```{r}
+# Simulate 100 replications
+replications_100 <- rbinom(100, size = 100, prob = 0.5)
+
+# View the simulated values
+print(replications_100)
+
+# Use the average of the replications as x
+x <- mean(replications_100)
+
+# Calculate the likelihood for each p
+likelihood_values <- sapply(p_values, likelihood, n = n, x = x)
+
+# Create a data frame for plotting
+data_100 <- data.frame(p = p_values, likelihood = likelihood_values)
+
+# Plot the likelihood function
+ggplot(data_100, aes(x = p, y = likelihood)) +
+  geom_line(color = "blue") +
+  labs(title = "Likelihood Function for Binomial Distribution (100 rep)", x = "p", y = "Likelihood") +
+  theme_minimal() +
+  geom_vline(xintercept = x/n, linetype = "dashed", color = "red") + # Highlight the maximum likelihood value
+  annotate("text", x = x/n, y = max(likelihood_values), label = "Max Likelihood", color = "red", vjust = -0.5)
+
+```
+
+d)
+
+```{r}
+# Load necessary libraries
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Define the likelihood function
+likelihood <- function(p, n, x) {
+  choose(n, x) * p^x * (1 - p)^(n - x)
+}
+
+# Define grid values for p and n
+p_values <- seq(0.01, 0.99, length.out = 100)
+n_values <- 1:20
+x_values <- 1:20
+
+# Generate data for all combinations of p, n, and x
+data <- expand.grid(p = p_values, n = n_values, x = x_values) %>%
+  mutate(likelihood = mapply(likelihood, p, n, x))
+
+# Plot using ggplot2 with facet_wrap for each x value
+ggplot(data, aes(x = p, y = n, fill = likelihood)) +
+  geom_tile() +
+  scale_fill_viridis_c(option = "viridis") +
+  labs(title = "Likelihood Function for Different Values of x", x = "p", y = "n") +
+  facet_wrap(~ x, ncol = 5) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
