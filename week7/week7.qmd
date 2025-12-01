@@ -1,0 +1,208 @@
+---
+title: "Week 7"
+author: "Daniel Poisel"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    self_contained: true
+    embed-resources: true
+---
+
+# Task 1
+
+## a)
+
+```{r}
+data(sleep)
+
+print(head(sleep))
+```
+
+```{r}
+g1 <- sleep$extra[sleep$group == 1]
+g2 <- sleep$extra[sleep$group == 2]
+
+print(head(g1))
+print(head(g2))
+```
+
+```{r}
+plot(ecdf(g1), main = "ECDF of Increase in Sleep Time",
+     xlab = "Extra Hours", ylab = "ECDF", col = "blue", lwd = 2)
+lines(ecdf(g2), col = "red", lwd = 2)
+
+legend("bottomright", legend = c("Group 1", "Group 2"),
+       col = c("blue", "red"), lwd = 2)
+```
+
+**Interpretation**
+
+Both do not overlap with each other and are noticeably different from each other, so the sleep time is therefore not the same in both groups.
+
+# b)
+
+```{r}
+m1_real <- mean(g1)
+print(m1_real)
+m2_real <- mean(g2)
+print(m2_real)
+```
+
+```{r}
+set.seed(123)
+
+B <- 10000
+
+boot_bias <- function(x) {
+  n <- length(x)
+  boot_means <- replicate(B, mean(sample(x, n, replace = TRUE)))
+  mean(boot_means) - mean(x)
+}
+
+bias_g1 <- boot_bias(g1)
+bias_g2 <- boot_bias(g2)
+
+print(bias_g1)
+print(bias_g2)
+
+```
+
+# Task 3
+
+## a)
+
+```{r}
+set.seed(123)
+
+n <- 10
+nsim <- 1000
+sigma2_hat <- numeric(nsim)
+
+for(i in 1:nsim){
+  x <- rnorm(n, mean = 0, sd = 1)
+  sigma2_hat[i] <- (1/n) * sum((x - mean(x))^2)
+}
+
+mean_estimate <- mean(sigma2_hat)
+bias <- mean_estimate - 1
+
+print(mean_estimate)
+print(bias)
+```
+
+## b)
+
+```{r}
+getAnywhere(var)
+```
+
+We need to reference C_Cov which is a c function:
+
+https://github.com/SurajGupta/r-source/blob/master/src/library/stats/src/cov.c
+
+According to GPT this uses the $$\sigma^{2} = \frac{1}{n - 1} \sum (X_i - X)^{2}$$ formula.
+
+```{r}
+var_estimate <- var(sigma2_hat)
+var_estimate
+```
+
+# c)
+
+```{r}
+mse <- mean((sigma2_hat - 1)^2)
+mse
+```
+
+**Relationship:**
+
+$$MSE = Bias^{2} + Var$$
+
+# Task 4
+
+## a)
+
+```{r}
+simulate_mean_median <- function(n_sim, n, mu = 0, sigma = 1) {
+  means <- numeric(n_sim)
+  medians <- numeric(n_sim)
+  
+  for (i in 1:n_sim) {
+    sample_data <- rnorm(n, mean = mu, sd = sigma)
+    means[i] <- mean(sample_data)
+    medians[i] <- median(sample_data)
+  }
+  
+  data.frame(mean = means, median = medians)
+}
+
+simulate_mean_median(5, 10)
+```
+
+## b)
+
+```{r}
+set.seed(123) # reproducibility
+
+sample_sizes <- c(10, 100, 1000)
+n_sim <- 10000
+mu <- 0
+sigma <- 1
+
+results <- list()
+
+for (n in sample_sizes) {
+  sim <- simulate_mean_median(n_sim, n, mu, sigma)
+  
+  bias_mean <- mean(sim$mean) - mu
+  bias_median <- mean(sim$median) - mu
+  
+  var_mean <- var(sim$mean)
+  var_median <- var(sim$median)
+  
+  results[[as.character(n)]] <- data.frame(
+    sample_size = n,
+    bias_mean = bias_mean,
+    bias_median = bias_median,
+    var_mean = var_mean,
+    var_median = var_median
+  )
+}
+
+do.call(rbind, results)
+```
+
+The estimators for mean should be unbiased as the bias is very tiny (3 magnitudes smaller) than the sample mean values we calculated in a). Meanwhile the median should also be unbiased for a similar reason.
+The higher the number of samples drawn per simulation the better the estimator regarding the mean. But the median estimator seems to be much less affected which makes it better.
+
+## c)
+
+```{r}
+variances <- c(1, 4, 9)
+n <- 100
+n_sim <- 1000
+
+results_var <- list()
+
+for (sigma2 in variances) {
+  sim <- simulate_mean_median(n_sim, n, mu = 0, sigma = sqrt(sigma2))
+  
+  bias_mean <- mean(sim$mean) - mu
+  bias_median <- mean(sim$median) - mu
+  
+  var_mean <- var(sim$mean)
+  var_median <- var(sim$median)
+  
+  results_var[[as.character(sigma2)]] <- data.frame(
+    variance = sigma2,
+    bias_mean = bias_mean,
+    bias_median = bias_median,
+    var_mean = var_mean,
+    var_median = var_median
+  )
+}
+
+do.call(rbind, results_var)
+```
+
+Increasing the n_sim to 10000 would cause bias and variance to be more precise.

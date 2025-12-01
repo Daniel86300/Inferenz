@@ -1,0 +1,49 @@
+---
+title: "Week 6"
+author: "Daniel Poisel"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    self_contained: true
+    embed-resources: true
+---
+
+# Task 4 b)
+
+```{r}
+set.seed(10000)
+n <- 100
+my <- 1
+sigma_sq <- 4
+
+# Draw from Norm Dist
+
+x <- rnorm(n, mean = my, sd = sqrt(sigma_sq))
+
+# Sufficient Stats
+
+sum_x <- sum(x)
+sum_x_sq <- sum(x^2)
+
+# MLEs
+
+mle_my <- mean(x)
+mle_sigma_sq <- mean((x - mle_my)^2)
+
+```
+
+$$
+\sum_{i=1}^{n} x_i = `r sum_x`
+$$
+
+$$
+\sum_{i=1}^{n} x_i^2 = `r sum_x_sq`
+$$
+
+$$
+\hat{\mu} = \frac{1}{n} \sum_{i=1}^{n} x_i = `r mle_my`
+$$
+
+$$
+\hat{\sigma}^2 = \frac{1}{n} \sum_{i=1}^{n} (x_i - \bar{x})^2 = `r mle_sigma_sq`
+$$
