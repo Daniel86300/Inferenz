@@ -1,0 +1,431 @@
+---
+title: "Week 8"
+author: "Daniel Poisel"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    self_contained: true
+    embed-resources: true
+---
+
+# Task 1
+
+## a)
+
+Model:  
+$$Y_1,\dots,Y_n \stackrel{}{\sim} \text{Bernoulli}(\gamma).$$
+
+Log-likelihood:  
+$$
+\ell(\gamma)
+= \sum_{i=1}^n \left[
+Y_i\log\gamma + (1-Y_i)\log(1-\gamma)
+\right].
+$$
+
+Score:  
+$$
+\frac{\partial \ell}{\partial \gamma}
+= \sum_{i=1}^n\left(\frac{Y_i}{\gamma} - \frac{1-Y_i}{1-\gamma}\right)
+= \frac{\sum_{i=1}^n Y_i - n\gamma}{\gamma(1-\gamma)}.
+$$
+
+Second derivative:  
+$$
+\frac{\partial^2 \ell}{\partial \gamma^2}
+= -\sum_{i=1}^n\left(
+\frac{Y_i}{\gamma^2} + \frac{1-Y_i}{(1-\gamma)^2}
+\right).
+$$
+
+Fisher information:  
+$$
+I_n(\gamma)
+= -\mathbb{E}\!\left[\frac{\partial^2 \ell}{\partial\gamma^2}\right]
+= n\left(\frac{1}{\gamma(1-\gamma)}\right).
+$$
+
+$$
+I_n(\gamma)=\frac{n}{\gamma(1-\gamma)}
+$$
+
+## b)
+ 
+$$Y_1,\dots,Y_n \sim N(\mu,\sigma^2).$$
+
+Log-likelihood:  
+$$
+\ell(\mu,\sigma)
+= -n\log\sigma
+- \frac{1}{2\sigma^2}\sum_{i=1}^n (Y_i-\mu)^2.
+$$
+
+---
+
+### Derivatives for μ
+
+Score:  
+$$
+\frac{\partial\ell}{\partial\mu}
+= \frac{1}{\sigma^2}\sum_{i=1}^n (Y_i-\mu).
+$$
+
+Second derivative:  
+$$
+\frac{\partial^2\ell}{\partial\mu^2}
+= -\frac{n}{\sigma^2}.
+$$
+
+Thus:  
+$$I_{\mu\mu}=\frac{n}{\sigma^2}.$$
+
+---
+
+### Cross term
+
+$$
+\frac{\partial^2\ell}{\partial\mu\,\partial\sigma}
+= -\frac{2}{\sigma^3}\sum_{i=1}^n (Y_i-\mu).
+$$
+
+Expectation is zero, so:  
+$$I_{\mu\sigma}=I_{\sigma\mu}=0.$$
+
+---
+
+### Derivatives for σ
+
+Score:  
+$$
+\frac{\partial\ell}{\partial\sigma}
+= -\frac{n}{\sigma}
++ \frac{1}{\sigma^3}\sum_{i=1}^n (Y_i-\mu)^2.
+$$
+
+Second derivative:  
+$$
+\frac{\partial^2\ell}{\partial\sigma^2}
+= \frac{n}{\sigma^2}
+- \frac{3}{\sigma^4}\sum_{i=1}^n (Y_i-\mu)^2.
+$$
+
+Expected Fisher information:  
+$$
+I_{\sigma\sigma}
+= -\mathbb{E}\!\left[\frac{\partial^2\ell}{\partial\sigma^2}\right]
+= \frac{2n}{\sigma^2}.
+$$
+
+---
+
+### Final Fisher information matrix
+
+$$
+I_n(\mu,\sigma)
+=
+\begin{pmatrix}
+\dfrac{n}{\sigma^2} & 0 \\[8pt]
+0 & \dfrac{2n}{\sigma^2}
+\end{pmatrix}
+$$
+
+## c)
+
+$$
+f(y;\alpha,\beta)
+=\frac{1}{\Gamma(\alpha)\beta^\alpha}
+y^{\alpha-1}e^{-y/\beta},\qquad y>0.
+$$
+
+Log-likelihood:  
+$$
+\ell(\beta)
+= -\alpha\log\beta - \frac{y}{\beta} + \text{const}.
+$$
+
+Score:  
+$$
+\frac{\partial\ell}{\partial\beta}
+= -\frac{\alpha}{\beta} + \frac{y}{\beta^2}.
+$$
+
+Second derivative:  
+$$
+\frac{\partial^2\ell}{\partial\beta^2}
+= \frac{\alpha}{\beta^2} - \frac{2y}{\beta^3}.
+$$
+
+Using  
+$$\mathbb{E}[Y] = \alpha\beta,$$  
+the Fisher information for one observation is:
+
+$$
+I_1(\beta)
+= -\mathbb{E}\!\left[\frac{\partial^2\ell}{\partial\beta^2}\right]
+= \frac{\alpha}{\beta^2}.
+$$
+
+For a sample of size \(n\):
+
+$$
+I_n(\beta)=\frac{n\alpha}{\beta^2}
+$$
+
+# Task 2
+
+(a) Binomial case:
+$$
+I^{-1}(\hat p) = \operatorname{Var}(\hat p) = \frac{p(1 - p)}{n},
+\qquad \hat p = 0.2.
+$$
+
+(b) Normal case:
+$$
+I^{-1}(\bar X) = \operatorname{Var}(\bar X) = \frac{\sigma^2}{n},
+\qquad \hat\sigma = 0.5.
+$$
+
+(c) Gamma case:
+$$
+I^{-1}(\bar X) = \operatorname{Var}(\bar X)
+= \frac{\beta^2}{\alpha n},
+\qquad \hat\alpha = 0.91,\ \hat\beta = 0.8.
+$$
+
+
+```{r}
+# Sample sizes
+n <- 1:20
+
+# (a) Binomial case: Var(p_hat) = p(1-p)/n with p_hat = 0.2
+p_hat <- 0.2
+var_binom <- p_hat * (1 - p_hat) / n
+
+# (b) Normal case: Var(X_bar) = sigma^2 / n with sigma_hat = 0.5
+sigma_hat <- 0.5
+var_normal <- sigma_hat^2 / n
+
+# (c) Gamma case: Var(X_bar) = beta^2 / (alpha n)
+alpha_hat <- 0.91
+beta_hat  <- 0.8
+var_gamma <- beta_hat^2 / (alpha_hat * n)
+
+# Create one plot
+plot(
+  n, var_binom, type = "l", lwd = 2,
+  xlab = "Sample Size (n)", ylab = "Variance",
+  main = "Inverse Fisher Information vs Sample Size"
+)
+
+# Add curves
+lines(n, var_normal, col = 2, lwd = 2)
+lines(n, var_gamma, col = 4, lwd = 2)
+
+# Add legend
+legend(
+  "topright",
+  legend = c("Binomial", "Normal", "Gamma"),
+  col = c(1, 2, 4), lwd = 2
+)
+```
+
+
+# Task 3
+
+
+$$
+\bar X \sim N\!\left(\mu,\; \frac{\sigma^2}{n}\right)
+$$
+
+$$
+\mathrm{SE} = \frac{\sigma}{\sqrt{n}}
+            = \frac{12}{\sqrt{100}}
+            = 1.2 .
+$$
+
+$$
+z = \frac{\bar{x} - \mu}{\sigma / \sqrt{n}}
+$$
+
+
+## a)
+
+Compute the $z$-value:
+
+$$
+z = \frac{80 - 78}{1.2}
+  = \frac{2}{1.2}
+  = 1.67.
+$$
+
+Thus,
+
+$$
+P(\bar X > 80)
+  = 1 - \Phi(1.67).
+$$
+
+Using the normal table ( https://www.ztable.net/ ) or in my case ChatGPT:
+
+$$
+\Phi(1.67) \approx 0.9525,
+\qquad
+P(\bar X > 80) \approx 1 - 0.9525 = 0.0475.
+$$
+
+## b)
+
+Compute:
+
+$$
+z = \frac{70 - 78}{1.2}
+  = \frac{-8}{1.2}
+  = -6.67.
+$$
+
+Then:
+
+$$
+P(\bar X < 70) = \Phi(-6.67).
+$$
+
+Since this is extremely far in the left tail:
+
+$$
+P(\bar X < 70) \approx 0\ (\text{about } 10^{-11}).
+$$
+
+## c)
+
+Compute both $z$-values:
+
+$$
+z_1 = \frac{77 - 78}{1.2} = -0.83,
+\qquad
+z_2 = \frac{79 - 78}{1.2} = 0.83.
+$$
+
+Thus:
+
+$$
+P(77 < \bar X < 79)
+ = \Phi(0.83) - \Phi(-0.83).
+$$
+
+Using normal table values:
+
+$$
+\Phi(0.83) \approx 0.7967, \qquad 
+\Phi(-0.83) = 1 - \Phi(0.83) \approx 0.2033.
+$$
+
+Therefore:
+
+$$
+P(77 < \bar X < 79)
+ \approx 0.7967 - 0.2033
+ = 0.5934.
+$$
+
+
+# Task 4
+
+$$
+8, 8, 12, 10, 12\ \text{minutes}.
+$$
+$$
+X_i \sim \mathrm{Exp}(\theta), \quad i=1,\dots,5,
+\quad f(x;\theta) = \theta e^{-\theta x},\ x\ge 0.
+$$
+
+
+MLE estimate Formula:
+
+$$
+\hat\theta = \frac{n}{\sum_{i=1}^n x_i} 
+= \frac{5}{8+8+12+10+12} 
+= \frac{5}{50} = 0.1\ \text{per minute}.
+$$
+
+$$
+S_n = \sum_{i=1}^n X_i \sim \mathrm{Gamma}(n, \text{rate } \theta).
+$$
+
+Chi-Square relation:
+
+$$
+Exp(\theta) = Gamma(1,\theta)
+$$
+
+$$
+2\theta S_n \sim \chi^2_{2n}.
+$$
+
+---
+
+## a)
+
+7 days → $S_7 = \sum_{i=1}^{7} X_i$.
+
+We want:
+
+$$
+P(S_7 > 1.5\ \text{hours}) = P(S_7 > 90\ \text{minutes}).
+$$
+
+Chi-Square relation:
+
+$$
+P(S_7 > 90) = P\big(2\hat\theta S_7 > 2\hat\theta\cdot 90\big) 
+= P(\chi^2_{14} > 18) = 1 - P_{\chi^{2}_{14}}(18),
+$$
+
+since $2\hat\theta \cdot 90 = 2\cdot 0.1 \cdot 90 = 18$.
+
+From Chi-Square tables or a calculator:
+
+$$
+P(S_7 > 90) \approx 0.224.
+$$
+
+---
+
+## b)
+
+$S_{14} = \sum_{i=1}^{14} X_i$.
+
+We want:
+
+$$
+P(S_{14} < 5) = P\big(2\hat\theta S_{14} < 2\hat\theta \cdot 5\big)
+= P(\chi^2_{28} < 1),
+$$
+
+because $2 \cdot 0.1 \cdot 5 = 1$.
+
+This is extremely far in the left tail:
+
+$$
+P(S_{14} < 5) \approx 0.00015 \approx 0.
+$$
+
+---
+
+## c)
+
+Max has 30 minutes until an appointment and 10 minutes travel → must wait ≤ 20 minutes.
+
+Inter-customer waiting times are exponential with mean 5 minutes → rate $\theta = 1/5 = 0.2$ per minute.
+
+Let $S_4 = \sum_{i=1}^4 X_i$ be the total waiting time. Using the Chi-Square relation:
+
+$$
+P(S_4 \le 20) = P(2\theta S_4 \le 2 \cdot 0.2 \cdot 20) 
+= P(\chi^2_8 \le 8).
+$$
+
+From tables or calculator:
+
+$$
+P(S_4 \le 20) \approx 0.58.
+$$
