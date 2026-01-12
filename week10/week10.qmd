@@ -1,0 +1,271 @@
+---
+title: "Week 10"
+author: "Daniel Poisel"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    self_contained: true
+    embed-resources: true
+---
+
+# Task 1
+
+## (a) Fisher information
+
+Log-likelihood of one Poisson observation
+$$
+\ell(\theta;x)=x\log\theta-\theta-\log(x!)
+$$
+
+First derivative (score function)
+$$
+\frac{\partial \ell}{\partial \theta}=\frac{x}{\theta}-1
+$$
+
+Second derivative
+$$
+\frac{\partial^2 \ell}{\partial \theta^2}=-\frac{x}{\theta^2}
+$$
+
+Definition of Fisher information for one observation
+$$
+I_1(\theta)=-\mathbb{E}\!\left[\frac{\partial^2 \ell}{\partial \theta^2}\right]
+$$
+
+Insert second derivative
+$$
+I_1(\theta)=-\mathbb{E}\!\left[-\frac{X}{\theta^2}\right]
+$$
+
+Use E[X]=θ for Poisson distribution
+$$
+I_1(\theta)=\frac{\theta}{\theta^2}=\frac{1}{\theta}
+$$
+
+Fisher information for n=10 observations
+$$
+I_{10}(\theta)=\frac{10}{\theta}
+$$
+
+
+## (b) Approximate 95% confidence interval
+
+Maximum likelihood estimator for Poisson parameter
+$$
+\hat{\theta}=\bar{X}
+$$
+
+Asymptotic normality of the MLE
+$$
+\hat{\theta}\;\dot{\sim}\;\mathcal{N}\!\left(\theta_0,\frac{1}{I_{10}(\theta_0)}\right)
+$$
+
+Substitute Fisher information
+$$
+\hat{\theta}\;\dot{\sim}\;\mathcal{N}\!\left(\theta_0,\frac{\theta_0}{10}\right)
+$$
+
+Plug-in estimate of the standard error
+$$
+\text{SE}(\hat{\theta})=\sqrt{\frac{\hat{\theta}}{10}}
+$$
+
+Use observed mean x̄ = 4.5
+$$
+\text{SE}(\hat{\theta})=\sqrt{\frac{4.5}{10}}=\sqrt{0.45}
+$$
+
+95% confidence interval using normal approximation
+$$
+\text{CI}_{0.95}:\;\hat{\theta}\pm z_{0.975}\sqrt{\frac{\hat{\theta}}{10}}
+$$
+
+Numerical confidence interval
+$$
+\text{CI}_{0.95}:\;4.5\pm1.96\sqrt{0.45}=(3.18,\;5.82)
+$$
+
+# Task 2
+
+## (a) Maximum likelihood estimator
+
+Log-likelihood for independent Poisson observations
+$$
+\ell(\theta;y)=\sum_{i=1}^n \bigl(y_i\log(\theta x_i)-\theta x_i-\log(y_i!)\bigr)
+$$
+
+Separate terms depending on θ
+$$
+\ell(\theta;y)=\sum_{i=1}^n y_i\log\theta+\sum_{i=1}^n y_i\log x_i-\theta\sum_{i=1}^n x_i-\sum_{i=1}^n\log(y_i!)
+$$
+
+First derivative with respect to θ
+$$
+\frac{\partial\ell}{\partial\theta}=\frac{1}{\theta}\sum_{i=1}^n y_i-\sum_{i=1}^n x_i
+$$
+
+Set score equation equal to zero
+$$
+\frac{1}{\theta}\sum_{i=1}^n y_i=\sum_{i=1}^n x_i
+$$
+
+Solve for the MLE
+$$
+\hat{\theta}=\frac{\sum_{i=1}^n y_i}{\sum_{i=1}^n x_i}
+$$
+
+## (b) Fisher information
+
+Second derivative of the log-likelihood
+$$
+\frac{\partial^2\ell}{\partial\theta^2}=-\frac{1}{\theta^2}\sum_{i=1}^n y_i
+$$
+
+Definition of Fisher information
+$$
+I(\theta)=-\mathbb{E}\!\left[\frac{\partial^2\ell}{\partial\theta^2}\right]
+$$
+
+Insert the second derivative
+$$
+I(\theta)=\frac{1}{\theta^2}\mathbb{E}\!\left[\sum_{i=1}^n Y_i\right]
+$$
+
+Use expectation of Poisson variables
+$$
+\mathbb{E}[Y_i]=\theta x_i
+$$
+
+Compute Fisher information
+$$
+I(\theta)=\frac{1}{\theta^2}\sum_{i=1}^n \theta x_i=\frac{1}{\theta}\sum_{i=1}^n x_i
+$$
+
+## (c) Variance of the MLE
+
+Asymptotic variance of the MLE
+$$
+\operatorname{Var}(\hat{\theta})=\frac{1}{I(\theta)}
+$$
+
+Insert Fisher information (Formula from Week 9)
+$$
+\operatorname{Var}(\hat{\theta})=\frac{\theta}{\sum_{i=1}^n x_i}
+$$
+
+# Task 3
+
+## (i) Deviance function for Poisson model
+
+Log-likelihood for a Poisson sample
+$$
+\ell(\theta)=\sum_{i=1}^n \bigl(y_i\log\theta-\theta-\log(y_i!)\bigr)
+$$
+
+MLE of the Poisson parameter
+$$
+\hat{\theta}=\bar{Y}
+$$
+
+Definition of the deviance
+$$
+D(\theta)=2\bigl[\ell(\hat{\theta})-\ell(\theta)\bigr]
+$$
+
+Insert the Poisson log-likelihood
+$$
+D(\theta)=2\sum_{i=1}^n\left[y_i\log\!\left(\frac{y_i}{\theta}\right)-(y_i-\theta)\right]
+$$
+
+## (ii) Plot deviance function
+
+R code: deviance plot and confidence interval
+
+```{r}
+y <- c(2, 0, 0, 1, 0, 1, 3, 0)
+n <- length(y)
+theta_hat <- mean(y)
+
+deviance <- function(theta) {
+  2 * sum(ifelse(y == 0,
+                 theta,
+                 y * log(y / theta) - (y - theta)))
+}
+
+theta_grid <- seq(0.25, 2, length.out = 500)
+D_vals <- sapply(theta_grid, deviance)
+
+plot(theta_grid, D_vals, type = "l",
+     xlab = expression(theta),
+     ylab = "Deviance D(theta)")
+
+abline(h = qchisq(0.95, df = 1), lty = 2)
+abline(v = theta_hat, lty = 3)
+
+CI <- range(theta_grid[D_vals <= qchisq(0.95, df = 1)])
+CI
+```
+
+# Task 4
+
+## (a) Identifying Plots
+
+Plot d has to be the likelihood L() function as the likelihood is a percentage (meaning if we integrate over the entire defined theta values we receive an are of 1)
+
+Plot a has to be the log likelihood l() function as it has the same maximum but is scaled on negative values (log(x) < 0 for arguments between 0 and 1)
+
+Plot c has to be the first derivative as it implies a continuously decreasing slope with a slope of 0 at the maximum of a)
+
+Plot b therefore as the only one left has to be the second derivative
+
+## (b) MLE and 50% relative likelihood interval
+
+The MLE is the value of θ where the likelihood L(θ) (or log-likelihood ℓ(θ)) is maximum.
+$$
+\hat{\theta} \approx 0.4
+$$
+
+The 50% relative likelihood interval consists of all θ where the likelihood is at least half of the maximum:
+$$
+\{\theta: L(\theta) \ge 0.5 \, L(\hat{\theta})\}
+$$
+
+Equivalently, in terms of the log-likelihood:
+$$
+\ell(\theta) \ge \ell(\hat{\theta}) + \log(0.5)
+$$
+
+Since $\log(0.5) \approx -0.693$, the interval satisfies:
+$$
+\ell(\theta) \ge \ell(\hat{\theta}) - 0.693
+$$
+
+## (c) Estimate variance of the MLE
+
+Observed Fisher information: negative reciprocal of second derivative at θ̂
+$$
+\operatorname{Var}(\hat{\theta}) \approx -\frac{1}{\ell''(\hat{\theta})}
+$$
+
+Steps:
+
+1. Use plot b (ℓ''(θ)) 
+
+2. Read value at $\hat\theta$
+
+3. Take negative reciprocal => variance estimate
+$$
+\operatorname{Var}(\hat{\theta}) = -\frac{1}{\ell''(\hat{\theta})}
+$$
+
+## (d) Approximate 95% confidence interval
+
+Normal approximation using estimated variance
+$$
+\hat{\theta} \pm 1.96 \sqrt{\operatorname{Var}(\hat{\theta})}
+$$
+
+Both intervals should be close if sample is large
+$$
+\text{95\% CI: } [\hat{\theta}-1.96\sqrt{\operatorname{Var}(\hat{\theta})}, \hat{\theta}+1.96\sqrt{\operatorname{Var}(\hat{\theta})}]
+$$
