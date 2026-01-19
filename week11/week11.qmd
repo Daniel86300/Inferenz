@@ -213,10 +213,6 @@ P(\theta = 0 \mid X_1 = 1, X_2 = 0)
 = 0.945.
 $$
 
----
-
-### Final Result
-
 After a positive first test and a negative second test, the posterior distribution of $\theta$ is:
 $$
 \theta \mid (X_1 = 1, X_2 = 0) \sim
